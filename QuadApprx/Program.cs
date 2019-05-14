@@ -32,10 +32,10 @@ namespace QuadApprx
             double x3 = double.Parse(Console.ReadLine());
             Console.WriteLine("===========");
 
-            //double x2 = (Math.Abs(x1) + Math.Abs(x3)) / 2;
+            double x2 = (Math.Abs(x1) + Math.Abs(x3)) / 2;
 
             bounds.Add(new PointData(x1, Func(x1)));
-            //bounds.Add(new PointData(x2, Func(x2)));
+            bounds.Add(new PointData(x2, Func(x2)));
             bounds.Add(new PointData(x3, Func(x3)));
         }
 
@@ -46,31 +46,44 @@ namespace QuadApprx
             double a2;
 
             double fAVG;
-            double minX;
+            //double minX;
 
             do
             {
-                // Calc avg x:
-                double x2 = (Math.Abs(bounds[0]._x) + Math.Abs(bounds[1]._x)) / 2;
-                bounds.Insert(1, new PointData() { _x = x2, _y = Func(x2) });
+                //// Calc avg x:
+                //double x2 = (Math.Abs(bounds[0]._x) + Math.Abs(bounds[1]._x)) / 2;
+                //bounds.Insert(1, new PointData() { _x = x2, _y = Func(x2) });
 
                 a0 = bounds[0]._y;
                 a1 = (bounds[1]._y - bounds[0]._y) / (bounds[1]._x - bounds[0]._x);
                 a2 = 1 / (bounds[2]._x - bounds[1]._x) * ((bounds[2]._y - bounds[0]._y) / (bounds[2]._x - bounds[0]._x) - a1);
 
-                int maxFuncIndex = GetMaxFuncIndex();
-
-                bounds.RemoveAt(maxFuncIndex);
+                //int maxFuncIndex = GetMaxFuncIndex();
 
                 double xAVG = (bounds[0]._x + bounds[1]._x) / 2 - a1 / (2 * a2);
                 fAVG = Func(xAVG);
 
-                // Calculate eps:
-                minX = (bounds[0]._x > bounds[1]._x) ? bounds[1]._x : bounds[0]._x;
+                var allValues = new List<PointData>() { new PointData(bounds[0]._x, bounds[0]._y),
+                                                        new PointData(bounds[1]._x, bounds[1]._y),
+                                                        new PointData(bounds[2]._x, bounds[2]._y),
+                                                        new PointData(xAVG, fAVG)
+                                                      };
+                var valuesWithoutMaxValue = allValues.OrderByDescending(t => t._y).Skip(1).ToList();
+                var xValues = valuesWithoutMaxValue.Select(t => t._x).OrderBy(x => x).ToList();
+
+                bounds.Clear();
+                bounds.Add(new PointData(xValues[0], Func(xValues[0])));
+                bounds.Add(new PointData(xValues[1], Func(xValues[1])));
+                bounds.Add(new PointData(xValues[2], Func(xValues[2])));
+
+                //bounds.RemoveAt(maxFuncIndex);
+
+                //// Calculate eps:
+                //minX = (bounds[0]._x > bounds[1]._x) ? bounds[1]._x : bounds[0]._x;
 
                 iter++;
             }
-            while (eps < Math.Abs((Func(minX) - fAVG) / fAVG));
+            while (eps < Math.Abs((Func(bounds[0]._x) - fAVG) / fAVG));
         }
 
         private static int GetMaxFuncIndex()
@@ -92,8 +105,8 @@ namespace QuadApprx
 
         private static void Output()
         {
-            Console.WriteLine(String.Format("Конечный интервал:\n[ {0} {1} ]", bounds[0]._x, bounds[1]._x));
-            Console.WriteLine("Количество итераций:" + iter);
+            Console.WriteLine(String.Format("Конечный интервал:\n[ {0:f3} {1:f3} ]", bounds[0]._x, bounds[2]._x));
+            Console.WriteLine("Количество итераций: " + iter);
         }
 
         private static double Func(double x)
